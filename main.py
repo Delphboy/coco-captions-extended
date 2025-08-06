@@ -34,7 +34,7 @@ def tokeniser(caption: str) -> List[str]:
     caption = caption.replace('.', ' . ')
     caption = caption.replace('  ', ' ')
     caption_list = caption.split(' ')
-    caption_list.remove('')
+    if '' in caption_list: caption_list.remove('')
     return caption_list
 
 if __name__ == "__main__":
@@ -53,9 +53,6 @@ if __name__ == "__main__":
     coco = load_karpathy_split(opts.karpathy)
     new_coco = load_karpathy_split(opts.karpathy)
 
-    if opts.stats:
-        calculate_sentence_statistics(coco)
-
     vlm = models.Qwen(opts.target_seq_len)
 
     for i, coco_element in enumerate(coco.images):
@@ -69,9 +66,6 @@ if __name__ == "__main__":
             cap = vlm.generate_caption(img_path, sentence)
             new_coco.images[i].sentences[s_i].raw = cap
             new_coco.images[i].sentences[s_i].tokens = tokeniser(cap)
-
-        if i == 0:
-            break
 
     save_karpathy_split(new_coco, opts.output)
     if opts.stats:
