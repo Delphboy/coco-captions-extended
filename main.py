@@ -8,7 +8,7 @@ from typing import List
 from coco import Coco, load_karpathy_split, save_karpathy_split, get_sentences, get_img_path
 import models
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 CAPTIONS_PER_IMAGE = 5
 
@@ -57,8 +57,8 @@ if __name__ == "__main__":
     coco = load_karpathy_split(opts.karpathy)
     new_coco = load_karpathy_split(opts.karpathy)
 
-    # vlm = models.Gemma(opts.target_seq_len)
-    vlm = models.Qwen(opts.target_seq_len)
+    vlm = models.Gemma(opts.target_seq_len)
+    # vlm = models.Qwen(opts.target_seq_len)
 
     for img_start_idx in range(0, len(coco.images), opts.batch_size):
         start = time.time()
