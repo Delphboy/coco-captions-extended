@@ -1,6 +1,7 @@
 import os
 import argparse
 import logging
+import time
 
 from typing import List
 
@@ -8,6 +9,8 @@ from coco import Coco, load_karpathy_split, save_karpathy_split, get_sentences, 
 import models
 
 logging.basicConfig(level=logging.INFO)
+
+CAPTIONS_PER_IMAGE = 5
 
 def calculate_sentence_statistics(coco: Coco):
     sentence_lengths = []
@@ -43,6 +46,7 @@ if __name__ == "__main__":
     args.add_argument("--coco_img_root", type=str, required=True)
     args.add_argument("--output", type=str, required=True)
     args.add_argument("--target_seq_len", type=int, required=True)
+    args.add_argument("--batch_size", type=int, default=8)
     args.add_argument("--stats", action="store_true")
 
     opts = args.parse_args()
@@ -53,19 +57,31 @@ if __name__ == "__main__":
     coco = load_karpathy_split(opts.karpathy)
     new_coco = load_karpathy_split(opts.karpathy)
 
+    # vlm = models.Gemma(opts.target_seq_len)
     vlm = models.Qwen(opts.target_seq_len)
 
-    for i, coco_element in enumerate(coco.images):
-        logging.info(f"Processing {i+1}/{len(coco.images)}")
+    for img_start_idx in range(0, len(coco.images), opts.batch_size):
+        start = time.time()
+        end_batch_idx = img_start_idx+opts.batch_size if img_start_idx+opts.batch_size < len(coco.images) else img_start_idx + (len(coco.images) - img_start_idx)
+        indicies = [i for i in range(img_start_idx, end_batch_idx)]
 
-        img_path = os.path.join(opts.coco_img_root, get_img_path(coco_element))
-        sentences = get_sentences(coco_element)
+        img_paths = [os.path.join(opts.coco_img_root, get_img_path(coco.images[i])) for i in indicies]
+        sentences = [get_sentences(coco.images[i]) for i in indicies]
+        assert len(img_paths) == len(sentences), "Different number of images to caption sets"
+        assert sum([len(s) for s in sentences]) % CAPTIONS_PER_IMAGE == 0, f"Number of sentences contains an element {[len(s) for s in sentences]} that is not divisible by {CAPTIONS_PER_IMAGE}"
 
-        for s_i, sentence in enumerate(sentences):
-            logging.info(f"\tCaption {s_i+1}/5")
-            cap = vlm.generate_caption(img_path, sentence)
-            new_coco.images[i].sentences[s_i].raw = cap
-            new_coco.images[i].sentences[s_i].tokens = tokeniser(cap)
+        new_captions = vlm.generate_caption(img_paths, sentences)
+        assert len(new_captions) == len(indicies) * CAPTIONS_PER_IMAGE, f"Received {len(new_captions)} new captions but expected {len(indicies) * CAPTIONS_PER_IMAGE}"
+
+        for i, img_idx in enumerate(indicies):
+            for caption_idx in range(len(get_sentences(new_coco.images[img_idx]))):
+                caption = new_captions[i * CAPTIONS_PER_IMAGE + caption_idx]
+                logging.debug(f"\t{i * CAPTIONS_PER_IMAGE + caption_idx} - {caption}")
+
+                new_coco.images[img_idx].sentences[caption_idx].raw = caption
+                new_coco.images[img_idx].sentences[caption_idx].tokens = tokeniser(caption)
+        end = time.time()
+        logging.info(f"Processed {img_start_idx} -> {end_batch_idx}/{len(coco.images)}\t\t{end-start} seconds")
 
     save_karpathy_split(new_coco, opts.output)
     if opts.stats:

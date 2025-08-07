@@ -29,7 +29,7 @@ class Coco:
     dataset: str
     images: List[CocoElement]
 
-def get_sentences(coco_element: CocoElement) -> List[str]: return [s.raw for s in coco_element.sentences]
+def get_sentences(coco_element: CocoElement) -> List[str]: return [coco_element.sentences[i].raw for i in range(5)]
 def get_img_path(coco_element: CocoElement) -> str: return os.path.join(coco_element.filepath, coco_element.filename)
 def get_img(path: str) -> Image.Image: return Image.open(path).convert("RGB")
 
