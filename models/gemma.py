@@ -1,10 +1,7 @@
 from typing import List
 
-from transformers import AutoProcessor, AutoModelForCausalLM
 import torch
-from transformers import Qwen2_5_VLForConditionalGeneration, GenerationConfig, Qwen2VLForConditionalGeneration
-from qwen_vl_utils import process_vision_info
-from transformers import AutoTokenizer, Gemma3ForConditionalGeneration
+from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -55,5 +52,5 @@ class Gemma:
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_texts = self.processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
-        return [ot.replace("\n", "") for ot in output_texts]
+        return [ot.split(":")[1].replace("\n", "") for ot in output_texts]
 
