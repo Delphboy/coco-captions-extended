@@ -16,6 +16,8 @@ python3 -m pip install flash-attn --no-build-isolation
 python3 -m pip install qwen-vl-utils
 ```
 
+If you wish to use the Gemma model, you must also install the huggingface cli and register your access token. Ensure that you have access to the Gemma model on hugging face
+
 ## Running
 
 ```bash
