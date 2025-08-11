@@ -24,7 +24,7 @@ class Gemma:
 
         for i in range(len(image_dirs)):
             for j in range(len(sentences[0])):
-                prompt = f"""Looking at the image provided, your task is to generate a description of the image that is between {int(0.8 * self.target_seq_len)} and {int(1.2 * self.target_seq_len)} words long. A human annotator described the image as:'{sentences[i][j]}'. Ensure that your caption is in English and imitates the style of the human generated caption"""
+                prompt = f"""Looking at the image provided, your task is to generate a description of the image that is between {int(0.8 * self.target_seq_len)} and {int(1.2 * self.target_seq_len)} words long. A human annotator described the image as:'{sentences[i][j]}'. Ensure that your caption is in English and imitates the style of the human generated caption. Only include the description as your output is being sent directly to the user."""
 
                 msg = [{
                     "role": "user",
@@ -52,5 +52,5 @@ class Gemma:
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_texts = self.processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
-        return [ot.split(":")[1].replace("\n", "") for ot in output_texts]
+        return [ot.split(":")[-1].replace("\n", "") for ot in output_texts]
 

@@ -5,10 +5,13 @@ import time
 
 from typing import List
 
+import torch
+
 from coco import Coco, load_karpathy_split, save_karpathy_split, get_sentences, get_img_path
 import models
 
 logging.basicConfig(level=logging.DEBUG)
+torch.set_float32_matmul_precision('high')
 
 CAPTIONS_PER_IMAGE = 5
 
@@ -33,6 +36,12 @@ def opts_checker(opts):
 
 def tokeniser(caption: str) -> List[str]:
     caption = caption.lower()
+    caption = caption.replace('’', "'")
+    caption = caption.replace("“", ' " ')
+    caption = caption.replace("”", ' " ')
+    caption = caption.replace("-", ' - ') 
+    caption = caption.replace("–", ' - ')
+    caption = caption.replace("-", ' - ')
     caption = caption.replace(',', ' , ')
     caption = caption.replace('.', ' . ')
     caption = caption.replace('  ', ' ')

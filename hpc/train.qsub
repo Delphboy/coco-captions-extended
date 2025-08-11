@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l h_rt=120:00:00
+#$ -l h_rt=200:00:00
 #$ -l h_vmem=11G
 #$ -pe smp 8
 #$ -l gpu=1
@@ -25,4 +25,5 @@ python3 main.py --karpathy "/data/EECS-YuanLab/COCO/dataset_coco.json" \
                 --coco_img_root "/data/PublicDataSets/Coco-2014/" \
                 --output "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}.json" \
                 --target_seq_len $seq_len \
+		--batch_size 12 \
                 --stats
