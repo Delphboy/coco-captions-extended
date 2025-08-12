@@ -6,6 +6,7 @@ import time
 from typing import List
 
 import torch
+from copy import deepcopy
 
 from coco import Coco, load_karpathy_split, save_karpathy_split, get_sentences, get_img_path
 import models
@@ -57,17 +58,17 @@ if __name__ == "__main__":
     args.add_argument("--target_seq_len", type=int, required=True)
     args.add_argument("--batch_size", type=int, default=8)
     args.add_argument("--stats", action="store_true")
+    args.add_argument("--split", type=str, choices=["all", "train", "restval", "val", "test"], default="all")
 
     opts = args.parse_args()
 
     opts_checker(opts)
     logging.info(opts)
 
-    coco = load_karpathy_split(opts.karpathy)
-    new_coco = load_karpathy_split(opts.karpathy)
+    coco = load_karpathy_split(opts.karpathy, opts.split)
+    new_coco = deepcopy(coco)
 
     vlm = models.Gemma(opts.target_seq_len)
-    # vlm = models.Qwen(opts.target_seq_len)
 
     for img_start_idx in range(0, len(coco.images), opts.batch_size):
         start = time.time()
@@ -91,8 +92,12 @@ if __name__ == "__main__":
                 new_coco.images[img_idx].sentences[caption_idx].tokens = tokeniser(caption)
         end = time.time()
         logging.info(f"Processed {img_start_idx} -> {end_batch_idx}/{len(coco.images)}\t\t{end-start} seconds")
+        torch.cuda.empty_cache()
 
-    save_karpathy_split(new_coco, opts.output)
+    output_file = opts.output if opts.split == "all" else f"{opts.output.split('.')[0]}_{opts.split}.json"
+    print(output_file)
+
+    save_karpathy_split(new_coco, output_file)
     if opts.stats:
         calculate_sentence_statistics(new_coco)
 

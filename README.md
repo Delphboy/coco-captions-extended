@@ -12,6 +12,7 @@ python3 -m pip install ninja
 
 python3 -m pip install torch torchvision torchaudio
 python3 -m pip install git+https://github.com/huggingface/transformers accelerate
+python3 -m pip install bitsandbytes
 python3 -m pip install flash-attn --no-build-isolation
 python3 -m pip install qwen-vl-utils
 ```

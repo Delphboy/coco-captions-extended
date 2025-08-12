@@ -1,7 +1,7 @@
 from typing import List
 
 import torch
-from transformers import AutoProcessor, Gemma3ForConditionalGeneration
+from transformers import AutoProcessor, Gemma3ForConditionalGeneration, BitsAndBytesConfig
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -9,14 +9,16 @@ class Gemma:
     def __init__(self, target_seq_len:int=150):
         self.model_name = "google/gemma-3-4b-it"
         self.target_seq_len = target_seq_len
+
+        quant_config = BitsAndBytesConfig(load_in_4bit=True)
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             self.model_name,
             torch_dtype=torch.bfloat16,
-            device_map="auto"
-        )
+            attn_implementation="flash_attention_2",
+            device_map="auto",
+            quantization_config=quant_config
+        ).eval()
 
-        min_pixels = 256 * 28 * 28
-        max_pixels = 1280 * 28 * 28
         self.processor = AutoProcessor.from_pretrained(self.model_name, padding=True, padding_side="left")
 
     def generate_caption(self, image_dirs: List[str], sentences: List[List[str]]):
@@ -45,9 +47,9 @@ class Gemma:
 
         inputs = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt")
         inputs = inputs.to(DEVICE)
-        input_len = inputs["input_ids"].shape[-1]
 
-        generated_ids = self.model.generate(**inputs, max_new_tokens=self.target_seq_len * 2)
+        with torch.inference_mode():
+            generated_ids = self.model.generate(**inputs, max_new_tokens=self.target_seq_len * 2)
 
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_texts = self.processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)

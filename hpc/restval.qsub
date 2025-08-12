@@ -25,4 +25,4 @@ python3 main.py --karpathy "/data/EECS-YuanLab/COCO/dataset_coco.json" \
                 --output "/data/EECS-YuanLab/COCO/dataset_coco_ext_${LENGTH}.json" \
                 --target_seq_len ${LENGTH} \
 		--batch_size 8 \
-                --split "train"
+                --split "restval"

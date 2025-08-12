@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass, asdict
 
 import os
@@ -33,33 +33,34 @@ def get_sentences(coco_element: CocoElement) -> List[str]: return [coco_element.
 def get_img_path(coco_element: CocoElement) -> str: return os.path.join(coco_element.filepath, coco_element.filename)
 def get_img(path: str) -> Image.Image: return Image.open(path).convert("RGB")
 
-def load_karpathy_split(karpathy_file_dir: str) -> Coco:
+def load_karpathy_split(karpathy_file_dir: str, split: Optional[str]="all") -> Coco:
     with open(karpathy_file_dir, 'r') as f:
         data = json.load(f)
 
     images = []
 
     for image_data in data['images']:
-        sentences = [
-            Sentences(
+        if split == "all" or image_data['split'] == split:
+            sentences = [
+                Sentences(
+                    imgid=image_data['imgid'],
+                    raw=sentence['raw'],
+                    sentid=sentence['sentid'],
+                    tokens=sentence['tokens']
+                ) for sentence in image_data['sentences']
+            ]
+
+            coco_element = CocoElement(
+                cocoid=image_data['cocoid'],
+                filename=image_data['filename'],
+                filepath=image_data['filepath'],
                 imgid=image_data['imgid'],
-                raw=sentence['raw'],
-                sentid=sentence['sentid'],
-                tokens=sentence['tokens']
-            ) for sentence in image_data['sentences']
-        ]
+                sentences=sentences,
+                sentids=image_data['sentids'],
+                split=image_data['split']
+            )
 
-        coco_element = CocoElement(
-            cocoid=image_data['cocoid'],
-            filename=image_data['filename'],
-            filepath=image_data['filepath'],
-            imgid=image_data['imgid'],
-            sentences=sentences,
-            sentids=image_data['sentids'],
-            split=image_data['split']
-        )
-
-        images.append(coco_element)
+            images.append(coco_element)
 
     return Coco(
         dataset=data['dataset'],
