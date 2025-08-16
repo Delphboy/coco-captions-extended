@@ -1,0 +1,31 @@
+#!/bin/bash
+#$ -l h_rt=00:15:00
+#$ -l h_vmem=11G
+#$ -pe smp 8
+#$ -l gpu=1
+#$ -l gpu_type=ampere
+#$ -wd /data/home/eey362/code/coco-captions-extended/
+#$ -j y
+#$ -m ea
+#$ -o logs/
+#$ -l cluster=andrena
+#$ -l rocky
+
+
+# Load modules
+module purge
+
+module load python/3.11.7-gcc-12.2.0
+module load cuda/12.6.2-gcc-12.2.0
+
+source .venv/bin/activate
+
+seq_len=100
+
+python3 merge.py --train_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_train.json" \
+                --restval_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_restval.json" \
+                --val_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_val.json" \
+                --test_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_test.json" \
+                --output "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}.json" \
+
+python3 stats.py --input "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}.json"

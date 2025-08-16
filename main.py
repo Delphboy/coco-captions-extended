@@ -16,18 +16,6 @@ torch.set_float32_matmul_precision('high')
 
 CAPTIONS_PER_IMAGE = 5
 
-def calculate_sentence_statistics(coco: Coco):
-    sentence_lengths = []
-
-    for i, element in enumerate(coco.images):
-        logging.info(f"STATS: Processing image {i}/{len(coco.images)}")
-        sentence_lengths += [len(s.raw.split(' ')) for s in element.sentences]
-
-    logging.info(f"Average Caption Length: {sum(sentence_lengths) / len(sentence_lengths)}")
-    logging.info(f"Shortest Caption Length: {min(sentence_lengths)}")
-    logging.info(f"Longest Caption Length: {max(sentence_lengths)}")
-    logging.info("-"*10)
-
 def opts_checker(opts):
     assert os.path.exists(opts.karpathy), f"FILE NOT FOUND: Karpathy JSON file not found at: {opts.karpathy}"
     assert os.path.exists(opts.coco_img_root), f"DIRECTORY NOT FOUND: COCO img root not found at: {opts.coco_img_root}"
@@ -57,7 +45,6 @@ if __name__ == "__main__":
     args.add_argument("--output", type=str, required=True)
     args.add_argument("--target_seq_len", type=int, required=True)
     args.add_argument("--batch_size", type=int, default=8)
-    args.add_argument("--stats", action="store_true")
     args.add_argument("--split", type=str, choices=["all", "train", "restval", "val", "test"], default="all")
 
     opts = args.parse_args()
@@ -70,7 +57,7 @@ if __name__ == "__main__":
 
     vlm = models.Gemma(opts.target_seq_len)
 
-    for img_start_idx in range(0, len(coco.images), opts.batch_size):
+    for img_start_idx in range(4998, len(coco.images), opts.batch_size):
         start = time.time()
         end_batch_idx = img_start_idx+opts.batch_size if img_start_idx+opts.batch_size < len(coco.images) else img_start_idx + (len(coco.images) - img_start_idx)
         indicies = [i for i in range(img_start_idx, end_batch_idx)]
@@ -98,8 +85,6 @@ if __name__ == "__main__":
     print(output_file)
 
     save_karpathy_split(new_coco, output_file)
-    if opts.stats:
-        calculate_sentence_statistics(new_coco)
 
 
 
