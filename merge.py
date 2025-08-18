@@ -57,14 +57,15 @@ if __name__ == "__main__":
 
     total_sentence_swaps = 0
 
-    for split in [train, restval, val, test]:
+    for split in [val, test, restval, train]:
         for element in split.images:
-            print(f"Processing image id: {element.cocoid}")
             element = process(element, original)
             new_coco.images.append(element)
 
+    assert len(original.images) == len(new_coco.images), f"LENGTH MISMATCH: The new coco length ({len(new_coco.images)}) doesn't match the old ({len(original.images)})"
+
     logging.info(f"There were {total_sentence_swaps} sentence swaps out of a possible {len(new_coco.images) * 5}. i.e. {(total_sentence_swaps / float(len(new_coco.images) * 5)) * 100}%")
-    save_karpathy_split(train, opts.output)
+    save_karpathy_split(new_coco, opts.output)
 
 
 

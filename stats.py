@@ -16,6 +16,7 @@ def calculate_sentence_statistics(coco: Coco):
         for sentence in element.sentences:
             sentence_lengths.append(len(sentence.tokens))
 
+    logging.info(f"Total number of images {len(coco.images)}")
     logging.info(f"Average Caption Length: {sum(sentence_lengths) / len(sentence_lengths)}")
     logging.info(f"Shortest Caption Length: {min(sentence_lengths)}")
     logging.info(f"Longest Caption Length: {max(sentence_lengths)}")
