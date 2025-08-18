@@ -13,7 +13,8 @@ def calculate_sentence_statistics(coco: Coco):
 
     for i, element in enumerate(coco.images):
         logging.debug(f"STATS: Processing image {i}/{len(coco.images)}")
-        sentence_lengths += [len(s.raw.split(' ')) for s in element.sentences]
+        for sentence in element.sentences:
+            sentence_lengths.append(len(sentence.tokens))
 
     logging.info(f"Average Caption Length: {sum(sentence_lengths) / len(sentence_lengths)}")
     logging.info(f"Shortest Caption Length: {min(sentence_lengths)}")

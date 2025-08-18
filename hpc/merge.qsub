@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l h_rt=00:15:00
+#$ -l h_rt=00:55:00
 #$ -l h_vmem=11G
 #$ -pe smp 8
 #$ -l gpu=1
@@ -27,5 +27,6 @@ python3 merge.py --train_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_l
                 --val_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_val.json" \
                 --test_split "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}_test.json" \
                 --output "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}.json" \
+                --original "/data/EECS-YuanLab/COCO/dataset_coco.json" \
 
 python3 stats.py --input "/data/EECS-YuanLab/COCO/dataset_coco_ext_${seq_len}.json"
